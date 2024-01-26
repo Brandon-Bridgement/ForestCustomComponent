@@ -21,7 +21,7 @@ export default Component.extend({
 
   get getGraphData() {
     console.log(`auth tooken is ${this.getAuthToken}`);
-    fetch("http://api-app.localhost.com:3000/api/neo4j-graph/userGraph", {
+    fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${this.getAuthToken}`,
@@ -30,11 +30,6 @@ export default Component.extend({
     }).then((data) => {
       console.log(data);
     });
-    // fetch("http://api-app.localhost.com:3000/api/neo4j-graph/userGraph", {
-    //   method: "GET",
-    // }).then((data) => {
-    //   console.log(data);
-    // });
   },
 
   async didInsertElement() {
