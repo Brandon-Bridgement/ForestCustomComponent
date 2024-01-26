@@ -2,6 +2,7 @@ import Component from "@glimmer/component";
 import { action } from "@ember/object";
 
 export default class MyGraphComponent extends Component {
+  console.log("Hello")
   @action
   async loadScript(url) {
     return new Promise((resolve, reject) => {
