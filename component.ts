@@ -27,9 +27,11 @@ export default Component.extend({
         Authorization: `Bearer ${this.getAuthToken}`,
         "Content-Type": "application/json",
       },
-    }).then((data) => {
-      console.log(data);
-    });
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("data: ", data);
+      });
   },
 
   async didInsertElement() {
