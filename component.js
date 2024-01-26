@@ -22,7 +22,7 @@ export default class MyGraphComponent extends Component {
   }
 
   @action
-  async didInsertElement() {
+  async didInsertElement(element) {
     try {
       await this.loadScript(
         "https://cdnjs.cloudflare.com/ajax/libs/sigma.js/2.4.0/sigma.js"
@@ -34,7 +34,8 @@ export default class MyGraphComponent extends Component {
       //   "https://cdn.jsdelivr.net/npm/graphology-layout-forceatlas2@0.10.1/worker.min.js"
       // );
 
-      this.loadGraphData();
+      const data = await this.loadGraphData();
+      this.initializeGraph(element, data);
       console.log("Scripts loaded")
     } catch (error) {
       console.error("Error loading scripts:", error);
@@ -42,9 +43,9 @@ export default class MyGraphComponent extends Component {
   }
 
   @action
-  loadGraphData() {
+  async loadGraphData() {
     console.log(`auth token is ${this.authToken}`);
-    fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
+    const response = await fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${this.authToken}`,
@@ -54,12 +55,12 @@ export default class MyGraphComponent extends Component {
       .then((response) => response.json())
       .then((data) => {
         console.log("data: ", data);
-        this.initializeGraph(data);
       });
+      return response.json();
   }
 
   @action
-  initializeGraph(data) {
+  initializeGraph(element, data) {
     const Graph = window.graphology;
     const Sigma = window.Sigma;
 
@@ -102,7 +103,7 @@ export default class MyGraphComponent extends Component {
     div.style.border = "2px solid #333";
     div.style["border-radius"] = "10px";
 
-    this.element.appendChild(div);
+    element.appendChild(div);
 
     new Sigma(graph, div);
   }
