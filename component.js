@@ -40,9 +40,17 @@ export default class MyGraphComponent extends Component {
     }
   }
 
+  async getAuthToken(){
+    console.log("getting auth token")
+    let authToken = await this.lianaSession.authToken;
+    console.log(`auth tooken is ${authToken}`);
+    return authToken;
+  
+  }
+
 @action
 async loadGraphData(retryCount = 0) {
-  let authToken = this.lianaSession.authToken;
+  let authToken = this.getAuthToken();
   console.log(`auth tooken is ${authToken}`);
 
   // Check if authToken is available
