@@ -45,22 +45,6 @@ export default class MyGraphComponent extends Component {
     }
   }
 
-  @action
-  async fetchData() {
-    console.log("Fetching data...")
-    if (this.authToken) {
-      try {
-        console.log("Fetching graph data...")
-        const data = await this.loadGraphData();
-        if (data) {
-          this.initializeGraph(this.element, data);
-        }
-      } catch (error) {
-        console.error("Error initializing graph with data:", error);
-      }
-    }
-  }
-
 @action
 async loadGraphData(retryCount = 0) {
   console.log(`auth token is ${this.authToken}`);
@@ -92,8 +76,10 @@ async loadGraphData(retryCount = 0) {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    return await response.json();
+    const data = await response.json();
+    if(data){
+      this.initializeGraph(this.element, data);
+    }
   } catch (error) {
     console.error("Error fetching graph data:", error);
     return null;
