@@ -50,7 +50,7 @@ async loadGraphData(retryCount = 0) {
   if (!this.authToken) {
     if (retryCount < 3) { // Retry up to 3 times
       console.log("Retrying to fetch graph data...");
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for 1 second before retrying
       return this.loadGraphData(retryCount + 1);
     } else {
       console.error("Failed to fetch graph data: auth token not available");
