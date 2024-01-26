@@ -5,7 +5,7 @@ import { inject as service } from "@ember/service";
 export default class MyGraphComponent extends Component {
   @service lianaSession;
 
-  @tracked authToken
+  @tracked authToken = this.lianaSession.authToken;
 
   @action
   async loadScript(url) {
@@ -44,7 +44,7 @@ export default class MyGraphComponent extends Component {
 
 @action
 async loadGraphData(retryCount = 0) {
-  authToken = this.lianaSession.authToken;
+  // authToken = this.lianaSession.authToken;
   console.log(`auth token is ${this.authToken}`);
 
   // Check if authToken is available
