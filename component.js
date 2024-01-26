@@ -45,18 +45,24 @@ export default class MyGraphComponent extends Component {
   @action
   async loadGraphData() {
     console.log(`auth token is ${this.authToken}`);
-    const response = await fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${this.authToken}`,
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("data: ", data);
+    try {
+      const response = await fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${this.authToken}`,
+          "Content-Type": "application/json",
+        },
       });
-      return response.json();
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching graph data:", error);
+      return null; // or handle the error as needed
+    }
   }
 
   @action
