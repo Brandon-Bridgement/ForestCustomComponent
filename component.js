@@ -68,7 +68,7 @@ async loadGraphData(retryCount = 0) {
     const response = await fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${authToken}`,
+        Authorization: `Bearer ${this.authToken}`,
         "Content-Type": "application/json",
       },
     });
