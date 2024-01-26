@@ -5,7 +5,7 @@ import { inject as service } from "@ember/service";
 export default class MyGraphComponent extends Component {
   @service lianaSession;
 
-  @tracked authToken = this.lianaSession.authToken;
+  @tracked authToken
 
   @action
   async loadScript(url) {
@@ -44,13 +44,14 @@ export default class MyGraphComponent extends Component {
 
 @action
 async loadGraphData(retryCount = 0) {
+  authToken = this.lianaSession.authToken;
   console.log(`auth token is ${this.authToken}`);
 
   // Check if authToken is available
   if (!this.authToken) {
     if (retryCount < 3) { // Retry up to 3 times
       console.log("Retrying to fetch graph data...");
-      await new Promise(resolve => setTimeout(resolve, 50000)); // Wait for 1 second before retrying
+      await new Promise(resolve => setTimeout(resolve, 10000)); // Wait for 1 second before retrying
       return this.loadGraphData(retryCount + 1);
     } else {
       console.error("Failed to fetch graph data: auth token not available");
