@@ -69,6 +69,10 @@ export default class MyGraphComponent extends Component {
   initializeGraph(element, data) {
     const Graph = window.graphology;
     const Sigma = window.Sigma;
+    if (!Graph || !Sigma) {
+      console.error("Graphology or Sigma libraries are not loaded");
+      return;
+    }
 
     let graph = new Graph();
     // Add nodes and edges from the data
@@ -109,6 +113,10 @@ export default class MyGraphComponent extends Component {
     div.style.border = "2px solid #333";
     div.style["border-radius"] = "10px";
 
+    if (!element) {
+      console.error("Element is not available for appending the graph");
+      return;
+    }
     element.appendChild(div);
 
     new Sigma(graph, div);
