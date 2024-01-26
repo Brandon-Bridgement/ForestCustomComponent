@@ -69,6 +69,7 @@ async loadGraphData(retryCount = 0) {
   if (this.authToken === undefined) {
     if (retryCount < 3) { // Retry up to 3 times
       console.log("Retrying to fetch graph data...");
+      console.log("Trying to re render")
       this.isDataLoaded = true
       await new Promise(resolve => setTimeout(resolve, 10000)); // Wait for 1 second before retrying
       return this.loadGraphData(retryCount + 1);
