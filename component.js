@@ -34,7 +34,7 @@ export default class MyGraphComponent extends Component {
       //   "https://cdn.jsdelivr.net/npm/graphology-layout-forceatlas2@0.10.1/worker.min.js"
       // );
 
-      // this.loadGraphData();
+      this.loadGraphData();
       console.log("Scripts loaded")
     } catch (error) {
       console.error("Error loading scripts:", error);
