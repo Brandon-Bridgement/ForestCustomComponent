@@ -47,8 +47,10 @@ export default class MyGraphComponent extends Component {
 
   @action
   async fetchData() {
+    console.log("Fetching data...")
     if (this.authToken) {
       try {
+        console.log("Fetching graph data...")
         const data = await this.loadGraphData();
         if (data) {
           this.initializeGraph(this.element, data);
