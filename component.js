@@ -35,6 +35,7 @@ export default class MyGraphComponent extends Component {
       // );
 
       // this.loadGraphData();
+      console.log("Scripts loaded")
     } catch (error) {
       console.error("Error loading scripts:", error);
     }
