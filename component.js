@@ -35,7 +35,7 @@ export default class MyGraphComponent extends Component {
       // );
 
       const data = await this.loadGraphData();
-      // this.initializeGraph(element, data);
+      this.initializeGraph(element, data);
       console.log("Scripts loaded")
     } catch (error) {
       console.error("Error loading scripts:", error);
