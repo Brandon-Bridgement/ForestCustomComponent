@@ -23,8 +23,6 @@ export default class MyGraphComponent extends Component {
 
   @action
   async didInsertElement() {
-    super.didInsertElement();
-
     try {
       await this.loadScript(
         "https://cdnjs.cloudflare.com/ajax/libs/sigma.js/2.4.0/sigma.js"
@@ -36,7 +34,7 @@ export default class MyGraphComponent extends Component {
         "https://cdn.jsdelivr.net/npm/graphology-layout-forceatlas2@0.10.1/worker.min.js"
       );
 
-      this.loadGraphData();
+      // this.loadGraphData();
     } catch (error) {
       console.error("Error loading scripts:", error);
     }
