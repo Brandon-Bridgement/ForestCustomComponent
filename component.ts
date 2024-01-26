@@ -21,6 +21,7 @@ export default Component.extend({
 
   get getGraphData() {
     console.log(`auth token is ${this.getAuthToken}`);
+    console.log("This is a test");
     fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
       method: "GET",
       headers: {
