@@ -69,6 +69,8 @@ export default class MyGraphComponent extends Component {
   initializeGraph(element, data) {
     const Graph = window.graphology;
     const Sigma = window.Sigma;
+    console.log("Graph data:", data);
+
     if (!Graph || !Sigma) {
       console.error("Graphology or Sigma libraries are not loaded");
       return;
