@@ -1,9 +1,14 @@
-import Component from "@ember/component";
-import { inject as service } from "@ember/service";
+import Component from "@glimmer/component";
+import { tracked } from "@glimmer/tracking";
+import { action, inject as service } from "@ember/service";
 
-export default Component.extend({
-  lianaSession: service(),
-  loadScript(url) {
+export default class MyGraphComponent extends Component {
+  @service lianaSession;
+
+  @tracked authToken = this.lianaSession.authToken;
+
+  @action
+  async loadScript(url) {
     return new Promise((resolve, reject) => {
       let script = document.createElement("script");
       script.type = "text/javascript";
@@ -14,29 +19,11 @@ export default Component.extend({
 
       document.head.appendChild(script);
     });
-  },
-  get getAuthToken() {
-    return this.lianaSession.authToken;
-  },
+  }
 
-  get getGraphData() {
-    console.log(`auth token is ${this.getAuthToken}`);
-    console.log("This is a test");
-    fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${this.getAuthToken}`,
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("data: ", data);
-      });
-  },
-
+  @action
   async didInsertElement() {
-    this._super(...arguments);
+    super.didInsertElement();
 
     try {
       await this.loadScript(
@@ -49,41 +36,60 @@ export default Component.extend({
         "https://cdn.jsdelivr.net/npm/graphology-layout-forceatlas2@0.10.1/worker.min.js"
       );
 
-      const Graph = window.graphology;
-      const Sigma = window.Sigma;
-
-      this.getGraphData;
-
-      let graph = new Graph();
-      graph.addNode("John", {
-        x: 0,
-        y: 10,
-        size: 5,
-        label: "John",
-        color: "blue",
-      });
-      graph.addNode("Mary", {
-        x: 10,
-        y: 0,
-        size: 3,
-        label: "Mary",
-        color: "red",
-      });
-      graph.addEdge("John", "Mary");
-
-      const div = document.createElement("div");
-      div.className = "sigma-container";
-      div.style.height = "500px";
-      div.style.width = "100%";
-      div.style.border = "2px solid #333";
-      div.style["border-radius"] = "10px";
-
-      // Append the div to the component's element
-      this.element.appendChild(div);
-
-      new Sigma(graph, div);
+      this.loadGraphData();
     } catch (error) {
       console.error("Error loading scripts:", error);
     }
-  },
-});
+  }
+
+  @action
+  loadGraphData() {
+    console.log(`auth token is ${this.authToken}`);
+    fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${this.authToken}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("data: ", data);
+        this.initializeGraph(data);
+      });
+  }
+
+  @action
+  initializeGraph(data) {
+    const Graph = window.graphology;
+    const Sigma = window.Sigma;
+
+    let graph = new Graph();
+    // Add nodes and edges from the data
+    // For example:
+    data.nodes.forEach((node) => {
+      graph.addNode(node.id, {
+        x: node.x,
+        y: node.y,
+        size: node.size,
+        label: node.label,
+        color: node.color,
+      });
+    });
+
+    data.edges.forEach((edge) => {
+      graph.addEdge(edge.source, edge.target);
+    });
+
+    const div = document.createElement("div");
+    div.className = "sigma-container";
+    div.style.height = "500px";
+    div.style.width = "100%";
+    div.style.border = "2px solid #333";
+    div.style["border-radius"] = "10px";
+
+    this.element.appendChild(div);
+
+    new Sigma(graph, div);
+  }
+}
