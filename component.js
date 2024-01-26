@@ -30,9 +30,9 @@ export default class MyGraphComponent extends Component {
       await this.loadScript(
         "https://cdnjs.cloudflare.com/ajax/libs/graphology/0.25.4/graphology.umd.min.js"
       );
-      await this.loadScript(
-        "https://cdn.jsdelivr.net/npm/graphology-layout-forceatlas2@0.10.1/worker.min.js"
-      );
+      // await this.loadScript(
+      //   "https://cdn.jsdelivr.net/npm/graphology-layout-forceatlas2@0.10.1/worker.min.js"
+      // );
 
       // this.loadGraphData();
     } catch (error) {
