@@ -42,28 +42,43 @@ export default class MyGraphComponent extends Component {
     }
   }
 
-  @action
-  async loadGraphData() {
-    console.log(`auth token is ${this.authToken}`);
-    try {
-      const response = await fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${this.authToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      return await response.json();
-    } catch (error) {
-      console.error("Error fetching graph data:", error);
-      return null; // or handle the error as needed
+@action
+async loadGraphData(retryCount = 0) {
+  console.log(`auth token is ${this.authToken}`);
+
+  // Check if authToken is available
+  if (!this.authToken) {
+    if (retryCount < 3) { // Retry up to 3 times
+      console.log("Retrying to fetch graph data...");
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before retrying
+      return this.loadGraphData(retryCount + 1);
+    } else {
+      console.error("Failed to fetch graph data: auth token not available");
+      return null;
     }
   }
+
+  // Proceed with fetching data
+  try {
+    const response = await fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${this.authToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching graph data:", error);
+    return null;
+  }
+}
+
 
   @action
   initializeGraph(element, data) {
