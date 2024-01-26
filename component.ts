@@ -68,19 +68,34 @@ export default class MyGraphComponent extends Component {
     let graph = new Graph();
     // Add nodes and edges from the data
     // For example:
-    data.nodes.forEach((node) => {
-      graph.addNode(node.id, {
-        x: node.x,
-        y: node.y,
-        size: node.size,
-        label: node.label,
-        color: node.color,
-      });
-    });
+    // data.nodes.forEach((node) => {
+    //   graph.addNode(node.id, {
+    //     x: node.x,
+    //     y: node.y,
+    //     size: node.size,
+    //     label: node.label,
+    //     color: node.color,
+    //   });
+    // });
 
-    data.edges.forEach((edge) => {
-      graph.addEdge(edge.source, edge.target);
+    // data.edges.forEach((edge) => {
+    //   graph.addEdge(edge.source, edge.target);
+    // });
+    graph.addNode("John", {
+      x: 0,
+      y: 10,
+      size: 5,
+      label: "John",
+      color: "blue",
     });
+    graph.addNode("Mary", {
+      x: 10,
+      y: 0,
+      size: 3,
+      label: "Mary",
+      color: "red",
+    });
+    graph.addEdge("John", "Mary");
 
     const div = document.createElement("div");
     div.className = "sigma-container";
