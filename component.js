@@ -5,7 +5,12 @@ import { inject as service } from "@ember/service";
 export default class MyGraphComponent extends Component {
   @service lianaSession;
 
-  @action
+  @tracked authToken;
+
+  constructor() {
+    super(...arguments);
+    this.authToken = this.lianaSession.authToken;
+  }
   async loadScript(url) {
     return new Promise((resolve, reject) => {
       let script = document.createElement("script");
@@ -31,30 +36,32 @@ export default class MyGraphComponent extends Component {
       // await this.loadScript(
       //   "https://cdn.jsdelivr.net/npm/graphology-layout-forceatlas2@0.10.1/worker.min.js"
       // );
-
-      const data = await this.loadGraphData();
-      this.initializeGraph(element, data);
       console.log("Scripts loaded")
     } catch (error) {
       console.error("Error loading scripts:", error);
     }
   }
 
-  async getAuthToken(){
-    console.log("getting auth token")
-    let authToken = await this.lianaSession.authToken;
-    console.log(`auth token is ${authToken}`);
-    return authToken;
-  
+  @action
+  async fetchData() {
+    if (this.authToken) {
+      try {
+        const data = await this.loadGraphData();
+        if (data) {
+          this.initializeGraph(this.element, data);
+        }
+      } catch (error) {
+        console.error("Error initializing graph with data:", error);
+      }
+    }
   }
 
 @action
 async loadGraphData(retryCount = 0) {
-  let authToken = this.getAuthToken();
-  // console.log(`auth tooken is ${authToken}`);
+  console.log(`auth token is ${this.authToken}`);
 
   // Check if authToken is available
-  if (authToken === undefined) {
+  if (this.authToken === undefined) {
     if (retryCount < 3) { // Retry up to 3 times
       console.log("Retrying to fetch graph data...");
       await new Promise(resolve => setTimeout(resolve, 10000)); // Wait for 1 second before retrying
