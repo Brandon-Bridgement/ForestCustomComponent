@@ -43,7 +43,7 @@ export default class MyGraphComponent extends Component {
   async getAuthToken(){
     console.log("getting auth token")
     let authToken = await this.lianaSession.authToken;
-    console.log(`auth tooken is ${authToken}`);
+    console.log(`auth token is ${authToken}`);
     return authToken;
   
   }
