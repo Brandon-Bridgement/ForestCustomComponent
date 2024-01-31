@@ -7,92 +7,66 @@ export default class MyGraphComponent extends Component {
   @service lianaSession;
 
   @tracked authToken;
-  @tracked isDataLoaded = false;
   @tracked graphData = null;
+  @tracked scriptsLoaded = false;
+  @tracked areScriptsLoaded = false;
 
   constructor() {
     super(...arguments);
-    this.initializeAuthToken();
+    this.loadScripts().then(() => {
+      this.areScriptsLoaded = true;
+      this.initializeGraph(); // Attempt to initialize graph after scripts are loaded
+    });
   }
 
-  async initializeAuthToken() {
-    while (!this.lianaSession.authToken) {
-      await new Promise(resolve => setTimeout(resolve, 100)); // Poll every 100 ms
+  async loadScripts() {
+    console.log("Starting to load scripts");
+    try {
+      await Promise.all([
+        this.loadScript("https://cdnjs.cloudflare.com/ajax/libs/sigma.js/2.4.0/sigma.js"),
+        this.loadScript("https://cdnjs.cloudflare.com/ajax/libs/graphology/0.25.4/graphology.umd.min.js")
+      ]);
+      console.log("Scripts loaded successfully");
+      this.scriptsLoaded = true;
+    } catch (error) {
+      console.error("Error loading scripts:", error);
     }
-    this.authToken = this.lianaSession.authToken;
-    this.loadGraphData();
   }
 
   async loadScript(url) {
+    console.log("Loading script:", url);
     return new Promise((resolve, reject) => {
       let script = document.createElement("script");
       script.type = "text/javascript";
-      script.onload = resolve;
-      script.onerror = reject;
+      script.onload = () => {
+        console.log(`Script loaded successfully: ${url}`);
+        resolve();
+      };
+      script.onerror = () => {
+        console.error(`Error loading script: ${url}`);
+        reject();
+      };
       script.src = url;
       document.head.appendChild(script);
     });
   }
 
   @action
-  async didInsertElement() {
-    try {
-      await this.loadScript("https://cdnjs.cloudflare.com/ajax/libs/sigma.js/2.4.0/sigma.js");
-      await this.loadScript("https://cdnjs.cloudflare.com/ajax/libs/graphology/0.25.4/graphology.umd.min.js");
-      console.log("Scripts loaded");
-      if (this.graphData) {
-        this.initializeGraph(this.graphData);
-      }
-    } catch (error) {
-      console.error("Error loading scripts:", error);
-    }
-  }
+  async initializeGraph(element) {
+    console.log("initializeGraph action triggered");
 
-  @action
-  async loadGraphData(retryCount = 0) {
-    console.log(`auth token is ${this.authToken}`);
-
-    if (!this.authToken) {
-      if (retryCount < 3) {
-        console.log("Retrying to fetch graph data...");
-        this.isDataLoaded = false;
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return this.loadGraphData(retryCount + 1);
-      } else {
-        console.error("Failed to fetch graph data: auth token not available");
-        return;
-      }
+    if (!this.areScriptsLoaded) {
+      console.log("Scripts are not loaded yet. Initialization will be retried.");
+      setTimeout(() => this.initializeGraph(element), 500); // Retry after a delay
+      return;
     }
 
-    try {
-      const response = await fetch("http://localhost:3000/api/neo4j-graph/userGraph", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${this.authToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+    // Fetch authToken and graph data
+    await this.fetchAuthTokenAndGraphData();
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      this.graphData = await response.json();
-      if (this.graphData && this.isElementAvailable) {
-        this.initializeGraph(this.graphData);
-      }
-    } catch (error) {
-      console.error("Error fetching graph data:", error);
-    }
-  }
-
-  @action
-  initializeGraph(data) {
-    const element = this.element;
-    console.log("Initializing graph", element)
-
-    if (!element) {
-      console.error("Element is not available for appending the graph");
+    // Now use `element` for graph initialization
+    if (!this.graphData) {
+      console.error("No graph data to initialize");
       return;
     }
 
@@ -105,28 +79,62 @@ export default class MyGraphComponent extends Component {
     }
 
     let graph = new Graph();
-    // Test nodes and edges
-    graph.addNode("John", { x: 0, y: 0, size: 3, label: "John", color: "blue" });
-    graph.addNode("Mary", { x: 1, y: 1, size: 3, label: "Mary", color: "red" });
-    graph.addEdge("John", "Mary");
+    this.graphData.nodes.forEach(node => {
+      graph.addNode(node.id, {
+        x: Math.random() * 100, // Random X coordinate
+        y: Math.random() * 100, // Random Y coordinate
+        label: node.properties.Id || node.properties.Email,
+        size: 15,
+        color: node.label === 'DEVICE' ? "#FA4F40" : node.label === 'USER' ? "#4F9FFA" : "#4FFA4F",
+      });
+    });
+    this.graphData.edges.forEach(edge => {
+      graph.addEdgeWithKey(edge.id, edge.source, edge.target, {
+        label: edge.label || "",
+        size: 3,
+      });
+    });
+    // graph.addNode("John", { x: 0, y: 10, size: 5, label: "John", color: "blue" });
+    // graph.addNode("Mary", { x: 10, y: 0, size: 3, label: "Mary", color: "red" });
+    // graph.addEdge("John", "Mary");
 
-    // Add nodes and edges from the data if available
-    // Example: 
-    // data.nodes.forEach(node => graph.addNode(node.id, { ...node }));
-    // data.edges.forEach(edge => graph.addEdge(edge.source, edge.target, { ...edge }));
-
-    const div = document.createElement("div");
-    div.className = "sigma-container";
-    div.style.cssText = "height: 500px; width: 100%; border: 2px solid #FF0000; border-radius: 10px;";
-    div.textContent = "Graph Container"; // Temporary content
-
-
-    element.appendChild(div);
-
-    new Sigma(graph, div);
+    // Create a new Sigma instance in the provided element
+    new Sigma(graph, element);
+    console.log("Graph initialized and rendered");
   }
 
-  get isElementAvailable() {
-    return !!this.element;
+  async fetchAuthTokenAndGraphData() {
+    // Fetch authToken
+    while (!this.lianaSession.authToken) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    this.authToken = this.lianaSession.authToken;
+    console.log("AuthToken acquired:", this.authToken);
+
+    // Fetch graph data
+    await this.loadGraphData();
+  }
+
+  async loadGraphData() {
+    const url = "http://localhost:3000/api/neo4j-graph/userGraph";
+    console.log("Fetching graph data from:", url);
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${this.authToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      this.graphData = await response.json();
+      console.log("Graph data successfully loaded:", this.graphData);
+    } catch (error) {
+      console.error("Error fetching graph data:", error);
+    }
   }
 }
