@@ -9,14 +9,11 @@ export default class MyGraphComponent extends Component {
   @tracked authToken;
   @tracked graphData = null;
   @tracked scriptsLoaded = false;
-  @tracked areScriptsLoaded = false;
+  @tracked element; // Track the element to render the graph in
 
   constructor() {
     super(...arguments);
-    this.loadScripts().then(() => {
-      this.areScriptsLoaded = true;
-      this.initializeGraph(); // Attempt to initialize graph after scripts are loaded
-    });
+    this.loadScripts();
   }
 
   async loadScripts() {
@@ -28,6 +25,10 @@ export default class MyGraphComponent extends Component {
       ]);
       console.log("Scripts loaded successfully");
       this.scriptsLoaded = true;
+
+      if (this.element) {
+        this.initializeGraph();
+      }
     } catch (error) {
       console.error("Error loading scripts:", error);
     }
@@ -38,81 +39,54 @@ export default class MyGraphComponent extends Component {
     return new Promise((resolve, reject) => {
       let script = document.createElement("script");
       script.type = "text/javascript";
-      script.onload = () => {
-        console.log(`Script loaded successfully: ${url}`);
-        resolve();
-      };
-      script.onerror = () => {
-        console.error(`Error loading script: ${url}`);
-        reject();
-      };
+      script.onload = () => resolve(console.log(`Script loaded successfully: ${url}`));
+      script.onerror = () => reject(console.error(`Error loading script: ${url}`));
       script.src = url;
       document.head.appendChild(script);
     });
   }
 
   @action
-  async initializeGraph(element) {
+  async initializeGraph() {
     console.log("initializeGraph action triggered");
 
-    if (!this.areScriptsLoaded) {
-      console.log("Scripts are not loaded yet. Initialization will be retried.");
-      setTimeout(() => this.initializeGraph(element), 500); // Retry after a delay
+    if (!this.scriptsLoaded) {
+      console.log("Scripts are not loaded yet.");
       return;
     }
 
-    // Fetch authToken and graph data
-    await this.fetchAuthTokenAndGraphData();
+    if (!this.authToken || !this.graphData) {
+      await this.fetchAuthTokenAndGraphData();
+    }
 
-    // Now use `element` for graph initialization
     if (!this.graphData) {
       console.error("No graph data to initialize");
       return;
     }
 
-    const Graph = window.graphology;
-    const Sigma = window.Sigma;
+    this.createGraph(this.element);
+  }
 
-    if (!Graph || !Sigma) {
-      console.error("Graphology or Sigma libraries are not loaded");
-      return;
+  @action
+  didInsertElement(element) {
+    console.log("Element inserted");
+    this.element = element;
+    if (this.scriptsLoaded) {
+      this.initializeGraph();
     }
-
-    let graph = new Graph();
-    this.graphData.nodes.forEach(node => {
-      graph.addNode(node.id, {
-        x: Math.random() * 100, // Random X coordinate
-        y: Math.random() * 100, // Random Y coordinate
-        label: node.properties.Id || node.properties.Email,
-        size: 15,
-        color: node.label === 'DEVICE' ? "#FA4F40" : node.label === 'USER' ? "#4F9FFA" : "#4FFA4F",
-      });
-    });
-    this.graphData.edges.forEach(edge => {
-      graph.addEdgeWithKey(edge.id, edge.source, edge.target, {
-        label: edge.label || "",
-        size: 3,
-      });
-    });
-    // graph.addNode("John", { x: 0, y: 10, size: 5, label: "John", color: "blue" });
-    // graph.addNode("Mary", { x: 10, y: 0, size: 3, label: "Mary", color: "red" });
-    // graph.addEdge("John", "Mary");
-
-    // Create a new Sigma instance in the provided element
-    new Sigma(graph, element);
-    console.log("Graph initialized and rendered");
   }
 
   async fetchAuthTokenAndGraphData() {
-    // Fetch authToken
+    await this.fetchAuthToken();
+    await this.loadGraphData();
+  }
+
+  async fetchAuthToken() {
     while (!this.lianaSession.authToken) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     this.authToken = this.lianaSession.authToken;
     console.log("AuthToken acquired:", this.authToken);
-
-    // Fetch graph data
-    await this.loadGraphData();
   }
 
   async loadGraphData() {
@@ -136,5 +110,30 @@ export default class MyGraphComponent extends Component {
     } catch (error) {
       console.error("Error fetching graph data:", error);
     }
+  }
+
+  createGraph(element) {
+    const Graph = window.graphology;
+    const Sigma = window.Sigma;
+
+    let graph = new Graph();
+    this.graphData.nodes.forEach(node => {
+      graph.addNode(node.id, {
+        x: Math.random() * 100, // Random X coordinate
+        y: Math.random() * 100, // Random Y coordinate
+        label: node.properties.Id || node.properties.Email,
+        size: 15,
+        color: node.label === 'DEVICE' ? "#FA4F40" : node.label === 'USER' ? "#4F9FFA" : "#4FFA4F",
+      });
+    });
+    this.graphData.edges.forEach(edge => {
+      graph.addEdgeWithKey(edge.id, edge.source, edge.target, {
+        label: edge.label || "",
+        size: 3,
+      });
+    });
+
+    new Sigma(graph, element);
+    console.log("Graph initialized and rendered");
   }
 }
